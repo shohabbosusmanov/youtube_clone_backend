@@ -1,0 +1,96 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum VideoStatus {
+    processing
+    done
+    error
+}
+
+model User {
+    id        String   @id @default(uuid())
+    googleId  String   @unique
+    email     String   @unique
+    username  String
+    picture   String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    videos   Video[]
+    comments Comment[]
+    likes    Like[]
+
+    @@map("users")
+}
+
+model Video {
+    id          String      @id @default(uuid())
+    title       String
+    description String?
+    thumbnail   String?
+    status      VideoStatus @default(processing)
+    videoUrl    String?
+    duration    Int?
+    viewsCount  Int         @default(0)
+    likesCount  Int         @default(0)
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    publishedAt DateTime?
+
+    authorId String
+
+    author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    comments Comment[]
+    likes    Like[]
+
+    @@index([authorId])
+    @@index([status])
+    @@index([createdAt])
+    @@index([viewsCount])
+    @@map("videos")
+}
+
+model Comment {
+    id        String   @id @default(uuid())
+    text      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId  String
+    videoId String
+
+    user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    video Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+    likes Like[]
+
+    @@index([userId])
+    @@index([videoId])
+    @@index([createdAt])
+    @@map("comments")
+}
+
+model Like {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+
+    userId    String
+    videoId   String?
+    commentId String?
+
+    user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    video   Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+    comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, videoId])
+    @@unique([userId, commentId])
+    @@index([userId])
+    @@index([videoId])
+    @@index([commentId])
+    @@map("likes")
+}
