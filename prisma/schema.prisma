@@ -25,6 +25,7 @@ model User {
     videos   Video[]
     comments Comment[]
     likes    Like[]
+    views    View[]
 
     @@map("users")
 }
@@ -33,21 +34,21 @@ model Video {
     id          String      @id @default(uuid())
     title       String
     description String?
-    thumbnail   String?
+    thumbnail   String
     status      VideoStatus @default(processing)
-    videoUrl    String?
-    duration    Int?
+    videoUrl    String
+    duration    Int
     viewsCount  Int         @default(0)
     likesCount  Int         @default(0)
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
-    publishedAt DateTime?
 
     authorId String
 
     author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
     comments Comment[]
     likes    Like[]
+    views    View[]
 
     @@index([authorId])
     @@index([status])
@@ -65,9 +66,8 @@ model Comment {
     userId  String
     videoId String
 
-    user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    video Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
-    likes Like[]
+    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+    video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
     @@index([userId])
     @@index([videoId])
@@ -79,18 +79,29 @@ model Like {
     id        String   @id @default(uuid())
     createdAt DateTime @default(now())
 
-    userId    String
-    videoId   String?
-    commentId String?
+    userId  String
+    videoId String
 
-    user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    video   Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
-    comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+    video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
     @@unique([userId, videoId])
-    @@unique([userId, commentId])
     @@index([userId])
     @@index([videoId])
-    @@index([commentId])
     @@map("likes")
+}
+
+model View {
+    id        String   @id @default(uuid())
+    videoId   String
+    userId    String
+    createdAt DateTime @default(now())
+
+    video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+    user  User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([videoId, userId])
+    @@index([videoId])
+    @@index([userId])
+    @@map("views")
 }

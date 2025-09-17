@@ -11,4 +11,11 @@ export class UsersController {
   async getProfile(@Req() req) {
     return this.usersService.findById(req.user.sub);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('liked-videos')
+  async getLikedVideos(@Req() req) {
+    const userId = req.user.sub;
+    return this.usersService.getLikedVideos(userId);
+  }
 }
